@@ -51,13 +51,12 @@ while True: #this allows shell to always be ready for input
     if 'PS1' in os.environ: #if there is custom prompt 1 then it re prints it out
         os.write(1, os.environ['PS1'].encode()) 
     else: # we set our own prompt
-        os.write(1, ("@> ").encode())
+        os.write(1, ('@> ').encode())
         
     #account for user input
     #accept user commands
     try: #error handling with os.read
         userIn = os.read(0,1024) #acts like myreadline and passes entirity of what is read
-
         if (len(userIn)>1):#input detected
             userIn = userIn.decode().split('\n') #remove end of line
             for i in userIn: 
@@ -65,4 +64,4 @@ while True: #this allows shell to always be ready for input
         #if empty it will still keep running
         
     except EOFError:
-        print('There has been an error')
+        os.write(1, ('There has been an error').encode())

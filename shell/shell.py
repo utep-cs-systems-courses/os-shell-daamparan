@@ -4,11 +4,17 @@ import os, sys, re
 '''
 OS gives us access to the read and write function
 sys gives us the ability to exit if needed
-re gives us 
+re gives us
 '''
 #methods below are all to dedicated to handling instructions given in the shell
 #either commands or starting a process etc
-    
+
+def reDir(param):
+    return
+
+def pipe(param):
+    return
+
 
 def exeProg(param):
     #directly for commands
@@ -20,48 +26,57 @@ def exeProg(param):
             pass #fail smoothly
     os.write(2, ("Could not exec. File not Found: %s\n" % param[0]).encode())
     sys.exit(1) #terminate with error
-            
-    
+
+
 def ident_Input(userIn):
+    wait_child = True #by default we always want to wait
+
     if len(userIn) <= 0:
         return #empty, no point
     elif userIn[0].lower() == 'exit': #generic all exit input | exit always be first
         os.write(1, 'Have a good day!\n\n'.encode())
         sys.exit(1)
     #comands following
-    elif userIn[0] == 'cd': #change directory is built in function 
+    elif userIn[0] == 'cd': #change directory is built in function
         try:
             for i in userIn[1:]:
                 os.chdir(i) #change directory
         except FileNotFoundError:
             os.write(1, ('No such directory found\n').encode())
+    elif '&' in userIn:
+        wait_child = False #& means to run in the background
+    elif '|' in userIn:
+        print('We are piping')
+    elif '<' in userIn or '>' in userIn:
+        print('We are redirecting')
     else: #other commmand from /usr/bin
         rc = os.fork() #child of shell prog
         if rc < 0: #taken from Dr. Freudenthal's Demo - p2-wait.py
-            os.write(2, ("fork failed, returning %d\n" % rc).encode()) 
+            os.write(2, ("fork failed, returning %d\n" % rc).encode())
             sys.exit(1)
         elif rc == 0: #we have the child
             exeProg(userIn) #child process will execute the command
             sys.exit(1) #terminate child
         else:
-            child_Proc = os.wait() #waits on the child
-            
-                
+            if wait_child: #we wait for the child
+                child_Proc = os.wait() #waits on the child
+
+
 while True: #this allows shell to always be ready for input
     if 'PS1' in os.environ: #if there is custom prompt 1 then it re prints it out
-        os.write(1, os.environ['PS1'].encode()) 
+        os.write(1, os.environ['PS1'].encode())
     else: # we set our own prompt
         os.write(1, ('@> ').encode())
-        
+
     #account for user input
     #accept user commands
     try: #error handling with os.read
         userIn = os.read(0,1024) #acts like myreadline and passes entirity of what is read
         if (len(userIn)>1):#input detected
             userIn = userIn.decode().split('\n') #remove end of line
-            for i in userIn: 
+            for i in userIn:
                 ident_Input(i.split()) #tokenize input
         #if empty it will still keep running
-        
+
     except EOFError:
         os.write(1, ('There has been an error').encode())
